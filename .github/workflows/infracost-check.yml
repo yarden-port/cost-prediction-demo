@@ -1,0 +1,42 @@
+name: Infracost Cost Estimation
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  infracost:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout the repository
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    # Step 2: Install Homebrew
+    - name: Install Homebrew
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential curl file git
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.profile
+        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+    # Step 3: Install Infracost
+    - name: Install Infracost
+      run: brew install infracost
+
+    # Step 4: Configure Infracost API key
+    - name: Configure Infracost API key
+      env:
+        INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
+      run: infracost configure set api_key $INFRACOST_API_KEY
+
+    # Step 5: Authenticate Infracost
+    - name: Infracost Authenticate
+      run: infracost auth login
+
+    # Step 6: Run Infracost Breakdown on the Terraform files
+    - name: Run Infracost Breakdown
+      run: infracost breakdown --path .
