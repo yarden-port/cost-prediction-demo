@@ -27,8 +27,8 @@ jobs:
         run: infracost configure set api_key $INFRACOST_API_KEY
 
       # Step 4: Authenticate Infracost
-      - name: Infracost Authenticate
-        run: infracost auth login
+     # - name: Infracost Authenticate
+      #  run: infracost auth login
 
       # Step 5: Run Infracost Breakdown on the Terraform files
       - name: Run Infracost Breakdown
