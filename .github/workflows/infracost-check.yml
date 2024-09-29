@@ -3,7 +3,7 @@ name: Infracost Cost Estimation
 on:
   workflow_dispatch:
     inputs:
-      port_payload:
+      port_contexts:
         required: true
         description: >-
           Port's payload, including details for who triggered the action and
