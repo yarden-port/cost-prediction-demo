@@ -65,3 +65,20 @@ jobs:
           operation: PATCH_RUN
           runId: ${{ fromJson(github.event.inputs.port_context).runId }}
           logMessage: "Total Monthly Cost Estimate: ${{ needs.infracost.outputs.total_cost }}$"
+      
+      - name: Set the env cost
+        id: set-cost
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          operation: UPSERT
+          identifier: ${{fromJson(github.event.inputs.port_context).entityId }}
+          blueprint: aws_dev_environment_workflow
+          runId: ${{ fromJson(github.event.inputs.port_context).runId }}
+          logMessage: "Updating the Total Monthly Cost Estimate..."          
+          properties: |
+            {
+              "status": "Cost Estimation Finished, Waiting for approval",
+              "total_cost": "${{ needs.infracost.outputs.total_cost }}$"
+            }
