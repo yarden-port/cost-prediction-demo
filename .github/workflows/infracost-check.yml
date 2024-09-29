@@ -30,17 +30,17 @@ jobs:
           INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
         run: infracost configure set api_key $INFRACOST_API_KEY
 
-      # Step 4: Run Infracost Breakdown on the Terraform files
+      # Step 4: Run Infracost Breakdown in JSON format
       - name: Run Infracost Breakdown
         id: infracost_output
-        run: infracost breakdown --path . > infracost_result.txt
+        run: infracost breakdown --path . --format json > infracost_result.json
 
-      # Step 5: Capture Infracost Output
-      - name: Capture Infracost Output
-        id: capture_infracost
+      # Step 5: Capture Total Cost from JSON Output
+      - name: Extract Total Cost from Infracost Result
+        id: extract_cost
         run: |
-          cost_output=$(cat infracost_result.txt)
-          echo "result=$cost_output" >> $GITHUB_ENV
+          total_cost=$(jq -r '.projects[].breakdown.totalMonthlyCost' infracost_result.json)
+          echo "TOTAL_COST=$total_cost" >> $GITHUB_ENV
 
   Update_Run:
     needs: infracost
@@ -60,4 +60,4 @@ jobs:
           baseUrl: https://api.getport.io
           operation: PATCH_RUN
           runId: ${{ fromJson(github.event.inputs.port_payload).context.runId }}
-          logMessage: ${{ env.result }}
+          logMessage: "Total Monthly Cost Estimate: ${{ env.TOTAL_COST }}"
