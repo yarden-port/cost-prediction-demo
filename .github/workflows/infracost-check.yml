@@ -64,4 +64,4 @@ jobs:
           baseUrl: https://api.getport.io
           operation: PATCH_RUN
           runId: ${{ fromJson(github.event.inputs.port_context).runId }}
-          logMessage: "Total Monthly Cost Estimate: ${{ needs.infracost.outputs.total_cost }}"
+          logMessage: "Total Monthly Cost Estimate: ${{ needs.infracost.outputs.total_cost }}$"
