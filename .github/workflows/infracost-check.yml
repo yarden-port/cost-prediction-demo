@@ -1,9 +1,13 @@
 name: Infracost Cost Estimation
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      port_payload:
+        required: true
+        description: >-
+          Port's payload, including details for who triggered the action and
+          general context (blueprint, run id, etc...)
 
 jobs:
   infracost:
@@ -26,10 +30,34 @@ jobs:
           INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
         run: infracost configure set api_key $INFRACOST_API_KEY
 
-      # Step 4: Authenticate Infracost
-     # - name: Infracost Authenticate
-      #  run: infracost auth login
-
-      # Step 5: Run Infracost Breakdown on the Terraform files
+      # Step 4: Run Infracost Breakdown on the Terraform files
       - name: Run Infracost Breakdown
-        run: infracost breakdown --path .
+        id: infracost_output
+        run: infracost breakdown --path . > infracost_result.txt
+
+      # Step 5: Capture Infracost Output
+      - name: Capture Infracost Output
+        id: capture_infracost
+        run: |
+          cost_output=$(cat infracost_result.txt)
+          echo "result=$cost_output" >> $GITHUB_ENV
+
+  Update_Run:
+    needs: infracost
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository (needed if accessing other files)
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Step 2: Inform cost of new environment
+      - name: Inform cost of new environment
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.getport.io
+          operation: PATCH_RUN
+          runId: ${{ fromJson(github.event.inputs.port_payload).context.runId }}
+          logMessage: ${{ env.result }}
