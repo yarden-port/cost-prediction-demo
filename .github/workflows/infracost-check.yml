@@ -24,18 +24,24 @@ jobs:
           curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
           echo "$HOME/.infracost/bin" >> $GITHUB_PATH
 
-      # Step 3: Run Infracost Breakdown in JSON format
+      # Step 3: Configure Infracost API key
+      - name: Configure Infracost API key
+        env:
+          INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
+        run: infracost configure set api_key $INFRACOST_API_KEY
+
+      # Step 4: Run Infracost Breakdown in JSON format
       - name: Run Infracost Breakdown
         id: infracost_output
         run: infracost breakdown --path . --format json > infracost_result.json
 
-      # Step 4: Capture Total Cost from JSON Output
+      # Step 5: Capture Total Cost from JSON Output
       - name: Extract Total Cost from Infracost Result
         id: extract_cost
         run: |
           total_cost=$(jq -r '.projects[].breakdown.totalMonthlyCost' infracost_result.json)
           echo "TOTAL_COST=$total_cost" >> $GITHUB_ENV
-          echo "::set-output name=total_cost::$total_cost"
+          echo "total_cost=$total_cost" >> $GITHUB_OUTPUT
 
     outputs:
       total_cost: ${{ steps.extract_cost.outputs.total_cost }}
