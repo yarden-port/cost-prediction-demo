@@ -51,7 +51,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # Step 2: Inform cost of new environment
+      # Step 2: Debugging - Print GitHub Event Payload
+      - name: Debug GitHub Event Payload
+        run: echo "Port Payload: ${{ toJson(github.event.inputs) }}"
+
+      # Step 3: Inform cost of new environment
       - name: Inform cost of new environment
         uses: port-labs/port-github-action@v1
         with:
